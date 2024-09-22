@@ -2,12 +2,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SmartInventoryBE.Models;
 
-public class TodoContext: DbContext
+public class SmartInventoryContext : DbContext
 {
-    public TodoContext(DbContextOptions<TodoContext> options) : base(options)
+    public SmartInventoryContext(DbContextOptions<SmartInventoryContext> options) : base(options)
     {
 
     }
 
-    public DbSet<TodoItem> TodoItems {get; set;} = null;
+    public DbSet<TodoItem> TodoItems { get; set; } = null;
+    public DbSet<Stock> Stocks { get; set; } = null;
+    public DbSet<Comment> Comments { get; set; } = null;
 }

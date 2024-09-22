@@ -9,13 +9,13 @@ using SmartInventoryBE.Models;
 
 namespace SmartInventoryBE.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/TodoItems")]
     [ApiController]
     public class TodoItemsController : ControllerBase
     {
-        private readonly TodoContext _context;
+        private readonly SmartInventoryContext _context;
 
-        public TodoItemsController(TodoContext context)
+        public TodoItemsController(SmartInventoryContext context)
         {
             _context = context;
         }
