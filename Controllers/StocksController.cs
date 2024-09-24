@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartInventoryBE.Dtos.Stock;
+using SmartInventoryBE.Mappers;
 using SmartInventoryBE.Models;
 
 namespace SmartInventoryBE.Controllers
@@ -24,7 +21,8 @@ namespace SmartInventoryBE.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Stock>>> GetStocks()
         {
-            return await _context.Stocks.ToListAsync();
+            var stocks = await _context.Stocks.ToListAsync();
+            return Ok(stocks.Select(s => s.ToStockDto()));
         }
 
         // GET: api/Stocks/5
@@ -38,7 +36,7 @@ namespace SmartInventoryBE.Controllers
                 return NotFound();
             }
 
-            return stock;
+            return Ok(stock.ToStockDto());
         }
 
         // PUT: api/Stocks/5
@@ -75,12 +73,13 @@ namespace SmartInventoryBE.Controllers
         // POST: api/Stocks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Stock>> PostStock(Stock stock)
+        public async Task<ActionResult<Stock>> PostStock([FromBody] CreateStockRequestDto stock)
         {
-            _context.Stocks.Add(stock);
+            var stockModel = stock.ToStockFromCreateDTO();
+            _context.Stocks.Add(stockModel);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetStock", new { id = stock.Id }, stock);
+            return CreatedAtAction(nameof(GetStock), new { id = stockModel.Id }, stockModel.ToStockDto());
         }
 
         // DELETE: api/Stocks/5
