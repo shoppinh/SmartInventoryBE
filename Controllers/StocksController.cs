@@ -42,14 +42,21 @@ namespace SmartInventoryBE.Controllers
         // PUT: api/Stocks/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutStock(int id, Stock stock)
+        public async Task<IActionResult> PutStock([FromRoute] int id, [FromBody] UpdateStockRequestDto stockDto)
         {
-            if (id != stock.Id)
+            var stock = await _context.Stocks.FindAsync(id);
+            if (stock == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(stock).State = EntityState.Modified;
+            stock.Symbol = stockDto.Symbol ?? stock.Symbol;
+            stock.CompanyName = stockDto.CompanyName ?? stock.CompanyName;
+            stock.Purchase = stockDto.Purchase ?? stock.Purchase;
+            stock.LastDividend = stockDto.LastDividend ?? stock.LastDividend;
+            stock.Industry = stockDto.Industry ?? stock.Industry;
+            stock.MarketCap = stockDto.MarketCap ?? stock.MarketCap;
+
 
             try
             {
@@ -67,7 +74,7 @@ namespace SmartInventoryBE.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(stock.ToStockDto());
         }
 
         // POST: api/Stocks
@@ -84,7 +91,7 @@ namespace SmartInventoryBE.Controllers
 
         // DELETE: api/Stocks/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStock(int id)
+        public async Task<IActionResult> DeleteStock([FromRoute]int id)
         {
             var stock = await _context.Stocks.FindAsync(id);
             if (stock == null)
