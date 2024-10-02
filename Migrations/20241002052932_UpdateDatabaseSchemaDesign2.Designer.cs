@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartInventoryBE.Models;
 
@@ -11,9 +12,11 @@ using SmartInventoryBE.Models;
 namespace SmartInventoryBE.Migrations
 {
     [DbContext(typeof(SmartInventoryContext))]
-    partial class SmartInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20241002052932_UpdateDatabaseSchemaDesign2")]
+    partial class UpdateDatabaseSchemaDesign2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -398,6 +401,40 @@ namespace SmartInventoryBE.Migrations
                     b.ToTable("Shipping");
                 });
 
+            modelBuilder.Entity("SmartInventoryBE.Models.Stock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Industry")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LastDividend")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long>("MarketCap")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Purchase")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stocks");
+                });
+
             modelBuilder.Entity("SmartInventoryBE.Models.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -605,7 +642,8 @@ namespace SmartInventoryBE.Migrations
 
             modelBuilder.Entity("SmartInventoryBE.Models.Product", b =>
                 {
-                    b.Navigation("Inventory");
+                    b.Navigation("Inventory")
+                        .IsRequired();
 
                     b.Navigation("OrderDetails");
 

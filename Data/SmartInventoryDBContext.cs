@@ -8,8 +8,16 @@ public class SmartInventoryContext : DbContext
     {
 
     }
+    public DbSet<User> Users { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Inventory> Inventories { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<Review> Reviews { get; set; }
+    public DbSet<Log> Logs { get; set; }
 
-    public DbSet<TodoItem> TodoItems { get; set; } = null;
-    public DbSet<Stock> Stocks { get; set; } = null;
-    public DbSet<Comment> Comments { get; set; } = null;
 }
