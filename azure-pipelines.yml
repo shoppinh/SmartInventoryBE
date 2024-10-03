@@ -7,13 +7,11 @@ trigger:
 
 pool:
   vmImage: 'ubuntu-latest'
+  
 
 # Define pipeline variables
 variables:
-  buildConfiguration: 'Release'
-  vpsHost: '35.232.20.236'            # Replace with your VPS IP or hostname
-  vpsUser: 'shoppinh'      # Replace with the username for VPS
-  sshPrivateKey: '$(SSH_PRIVATE_KEY)' # Set up SSH private key in pipeline secrets
+  - group: Smart_Inventory_BE_Secrets
 
 stages:
   - stage: Build
