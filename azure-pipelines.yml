@@ -34,7 +34,7 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-              ArtifactName: 'drop'
+              ArtifactName: 'build'
               publishLocation: 'Container'
 
   - stage: Deploy
@@ -46,11 +46,11 @@ stages:
             inputs:
               buildType: 'current'
               downloadType: 'single'
-              artifactName: 'drop'
-              downloadPath: '$(System.ArtifactsDirectory)/drop'
+              artifactName: 'SmartInventoryBE'
+              downloadPath: '$(System.ArtifactsDirectory)/SmartInventoryBE'
 
           - script: |
-              mkdir -p /tmp/deploy && tar -czvf /tmp/deploy/app.tar.gz -C $(System.ArtifactsDirectory)/drop .
+              mkdir -p /tmp/deploy && tar -czvf /tmp/deploy/app.tar.gz -C $(System.ArtifactsDirectory)/SmartInventoryBE .
             displayName: 'Prepare the App for Deployment'
 
           - task: Bash@3
@@ -69,7 +69,7 @@ stages:
               inline: |
                 # Extract the uploaded app tar file
                 tar -xzf ~/app.tar.gz -C ~/app
-                # Optional: Stop the existing app service
                 # Start or restart the application (assuming systemd)
-                sudo systemctl restart your-app.service
+                sudo systemctl restart SmartInventoryBE
+                
             displayName: 'Deploy App on VPS'
