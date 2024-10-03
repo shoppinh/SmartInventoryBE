@@ -68,6 +68,7 @@ stages:
               runOptions: 'inline'
               inline: |
                 # Extract the uploaded app tar file
+                sudo rm -rf ~/app/SmartInventoryBE
                 sudo tar -xzf ~/app.tar.gz -C ~/app
                 # Start or restart the application (assuming systemd)
                 sudo systemctl restart SmartInventoryBE
