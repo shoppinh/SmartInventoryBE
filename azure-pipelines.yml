@@ -58,6 +58,8 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
+                sudo apt-get install -y sshpass  # Install sshpass
+                sshpass -p "$(vpsPassword)" ssh -o StrictHostKeyChecking=no $(vpsUser)@$(vpsHost)
                 mkdir -p ~/.ssh && echo "$(sshPrivateKey)" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
                 scp -o StrictHostKeyChecking=no /tmp/deploy/app.tar.gz $(vpsUser)@$(vpsHost):~/app.tar.gz
 
