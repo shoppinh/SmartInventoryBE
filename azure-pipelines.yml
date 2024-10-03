@@ -1,17 +1,76 @@
-# ASP.NET Core
-# Build and test ASP.NET Core projects targeting .NET Core.
-# Add steps that run tests, create a NuGet package, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+# .NET Core Azure Pipeline for VPS Deployment
 
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
+# Define pipeline variables
 variables:
   buildConfiguration: 'Release'
+  vpsHost: '35.232.20.236'            # Replace with your VPS IP or hostname
+  vpsUser: 'shoppinh'      # Replace with the username for VPS
+  sshPrivateKey: '$(SSH_PRIVATE_KEY)' # Set up SSH private key in pipeline secrets
 
-steps:
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
+stages:
+  - stage: Build
+    displayName: 'Build the .NET Core app'
+    jobs:
+      - job: Build
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Install .NET Core SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '8.0'  # Use the version of .NET Core you're using
+
+          - script: |
+              dotnet restore
+              dotnet build --configuration $(buildConfiguration)
+              dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+            displayName: 'Restore, Build, and Publish the App'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: Deploy
+    displayName: 'Deploy to VPS'
+    jobs:
+      - job: Deploy
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)/drop'
+
+          - script: |
+              mkdir -p /tmp/deploy && tar -czvf /tmp/deploy/app.tar.gz -C $(System.ArtifactsDirectory)/drop .
+            displayName: 'Prepare the App for Deployment'
+
+          - task: Bash@3
+            displayName: 'Copy App to VPS'
+            inputs:
+              targetType: 'inline'
+              script: |
+                mkdir -p ~/.ssh && echo "$(sshPrivateKey)" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+                scp -o StrictHostKeyChecking=no /tmp/deploy/app.tar.gz $(vpsUser)@$(vpsHost):~/app.tar.gz
+
+          - task: SSH@0
+            inputs:
+              sshEndpoint: 'VPSConnection'  # You need to configure this in Azure DevOps
+              runOptions: 'inline'
+              inline: |
+                # Extract the uploaded app tar file
+                tar -xzf ~/app.tar.gz -C ~/app
+                # Optional: Stop the existing app service
+                # Start or restart the application (assuming systemd)
+                sudo systemctl restart your-app.service
+            displayName: 'Deploy App on VPS'
