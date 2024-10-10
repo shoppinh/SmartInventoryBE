@@ -30,10 +30,18 @@ stages:
               dotnet build --configuration $(buildConfiguration)
               dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
             displayName: 'Restore, Build, and Publish the App'
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'  
+              includeRootFolder: false  
+              archiveType: 'tar'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/build.tar.gz'  
+              replaceExistingArchive: true
 
+          # Step 5: Publish the tar as a pipeline artifact (optional)
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/build.tar.gz'
               ArtifactName: 'SmartInventoryBE'
               publishLocation: 'Container'
 
