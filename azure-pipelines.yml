@@ -37,11 +37,23 @@ stages:
               archiveType: 'tar'
               archiveFile: '$(Build.ArtifactStagingDirectory)/SmartInventoryBE.tar.gz'  
               replaceExistingArchive: true
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'  
+              includeRootFolder: false  
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/SmartInventoryBE.zip'  
+              replaceExistingArchive: true
 
           # Step 5: Publish the tar as a pipeline artifact (optional)
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/SmartInventoryBE.tar.gz'
+              ArtifactName: 'SmartInventoryBE'
+              publishLocation: 'Container'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/SmartInventoryBE.zip'
               ArtifactName: 'SmartInventoryBE'
               publishLocation: 'Container'
 
