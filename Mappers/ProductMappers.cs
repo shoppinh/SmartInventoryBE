@@ -1,6 +1,6 @@
-using System;
-using SmartInventoryBE.Dtos.Product;
 using SmartInventoryBE.Models;
+using SmartInventoryBE.ProjectAggregate.Request;
+using SmartInventoryBE.ProjectAggregate.Response;
 
 namespace SmartInventoryBE.Mappers;
 

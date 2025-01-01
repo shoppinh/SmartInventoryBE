@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SmartInventoryBE.Dtos.Product;
 using SmartInventoryBE.Mappers;
 using SmartInventoryBE.Models;
+using SmartInventoryBE.ProjectAggregate.Request;
+using SmartInventoryBE.ProjectAggregate.Response;
 
 namespace SmartInventoryBE.Controllers
 {

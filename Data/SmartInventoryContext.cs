@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using SmartInventoryBE.Models;
 
 namespace SmartInventoryBE.Models;
 
@@ -20,9 +19,7 @@ public class SmartInventoryContext : DbContext
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Log> Logs { get; set; }
-
-public DbSet<SmartInventoryBE.Models.PaymentTransaction> PaymentTransaction { get; set; } = default!;
-
-public DbSet<SmartInventoryBE.Models.Shipping> Shipping { get; set; } = default!;
+    public DbSet<PaymentTransaction> PaymentTransaction { get; set; }
+    public DbSet<Shipping> Shipping { get; set; }
 
 }
