@@ -1,12 +1,9 @@
-using System;
+using SmartInventoryBE.ProjectAggregate.ViewModel;
 
 namespace SmartInventoryBE.Models;
 
-public class Category
+public class Category : GenericBaseEntity<CategoryModel, Category>
 {
-    public int CategoryId { get; set; }
-    public string CategoryName { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    public string Name { get; set; } = string.Empty;
     public List<Product> Products { get; set; } = new List<Product>();
 }

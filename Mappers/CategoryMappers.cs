@@ -1,6 +1,6 @@
-using System;
-using SmartInventoryBE.Dtos.Category;
 using SmartInventoryBE.Models;
+using SmartInventoryBE.ProjectAggregate.Request;
+using SmartInventoryBE.ProjectAggregate.Response;
 
 namespace SmartInventoryBE.Mappers;
 
@@ -10,8 +10,8 @@ public static class CategoryMappers
     {
         return new CategoryDto
         {
-            CategoryId = category.CategoryId,
-            CategoryName = category.CategoryName,
+            CategoryId = category.Id,
+            CategoryName = category.Name,
             CreatedAt = category.CreatedAt,
             UpdatedAt = category.UpdatedAt
         };
@@ -21,13 +21,13 @@ public static class CategoryMappers
     {
         return new Category
         {
-            CategoryName = categoryDto.CategoryName
+            Name = categoryDto.CategoryName
         };
     }
 
     public static Category ToCategoryFromUpdateDTO(this UpdateCategoryRequestDto categoryDto, Category currCategory)
     {
-        currCategory.CategoryName = categoryDto.CategoryName;
+        currCategory.Name = categoryDto.CategoryName;
         currCategory.UpdatedAt = DateTime.Now;
         return currCategory;
     }

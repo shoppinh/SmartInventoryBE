@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SmartInventoryBE.Dtos.Category;
 using SmartInventoryBE.Mappers;
 using SmartInventoryBE.Models;
+using SmartInventoryBE.ProjectAggregate.Request;
+using SmartInventoryBE.ProjectAggregate.Response;
 
 namespace SmartInventoryBE.Controllers
 {
@@ -86,7 +82,7 @@ namespace SmartInventoryBE.Controllers
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategory", new { id = category.CategoryId }, category.ToCategoryDto());
+            return CreatedAtAction("GetCategory", new { id = category.Id }, category.ToCategoryDto());
         }
 
         // DELETE: api/Categories/5
@@ -107,7 +103,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool CategoryExists(int id)
         {
-            return _context.Categories.Any(e => e.CategoryId == id);
+            return _context.Categories.Any(e => e.Id == id);
         }
     }
 }
