@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartInventoryBE.Models;
 
@@ -11,9 +12,11 @@ using SmartInventoryBE.Models;
 namespace SmartInventoryBE.Migrations
 {
     [DbContext(typeof(SmartInventoryContext))]
-    partial class SmartInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20250101162558_RemoveManualUserIdFK")]
+    partial class RemoveManualUserIdFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,13 +54,13 @@ namespace SmartInventoryBE.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "083166a7-1da7-4f5c-b88e-4f2963b9dcda",
+                            Id = "c1612ce5-1577-471e-a995-3f4e2b9853ef",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "a06bcd02-c5c5-4786-8193-dd23cdf8cb64",
+                            Id = "47c9e9c4-f089-4742-a89a-d6aeb6abf384",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -246,6 +249,7 @@ namespace SmartInventoryBE.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LogId");
@@ -279,6 +283,7 @@ namespace SmartInventoryBE.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("OrderId");
@@ -429,6 +434,7 @@ namespace SmartInventoryBE.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("ReviewId");
@@ -630,7 +636,9 @@ namespace SmartInventoryBE.Migrations
                 {
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Logs")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -651,7 +659,9 @@ namespace SmartInventoryBE.Migrations
 
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Orders")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PaymentTransaction");
 
@@ -700,7 +710,9 @@ namespace SmartInventoryBE.Migrations
 
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Reviews")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
 

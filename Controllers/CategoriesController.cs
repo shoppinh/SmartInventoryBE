@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using SmartInventoryBE.Interfaces.RepositoryInterfaces;
 using SmartInventoryBE.Mappers;
-using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
 using SmartInventoryBE.ProjectAggregate.Response;
 
@@ -11,18 +11,19 @@ namespace SmartInventoryBE.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly SmartInventoryContext _context;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public CategoriesController(SmartInventoryContext context)
+        public CategoriesController(ICategoryRepository categoryRepository)
         {
-            _context = context;
+            _categoryRepository = categoryRepository;
         }
 
         // GET: api/Categories
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _categoryRepository.GetAllAsync();
             return Ok(categories.Select(c => c.ToCategoryDto()));
         }
 
@@ -30,7 +31,7 @@ namespace SmartInventoryBE.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CategoryDto>> GetCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepository.GetByIdAsync(id);
 
             if (category == null)
             {
@@ -45,42 +46,27 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCategory(int id, UpdateCategoryRequestDto categoryDto)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepository.GetByIdAsync(id);
             if (category == null)
             {
                 return NotFound();
             }
 
             categoryDto.ToCategoryFromUpdateDTO(category);
-            _context.Entry(category).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _categoryRepository.UpdateAsync(category);
 
             return Ok(category.ToCategoryDto());
         }
 
         // POST: api/Categories
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<CategoryDto>> PostCategory(CreateCategoryRequestDto createCategoryRequestDto)
         {
             var category = createCategoryRequestDto.ToCategoryFromCreateDTO();
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
+
+            await _categoryRepository.InsertAsync(category);
 
             return CreatedAtAction("GetCategory", new { id = category.Id }, category.ToCategoryDto());
         }
@@ -89,21 +75,15 @@ namespace SmartInventoryBE.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepository.GetByIdAsync(id);
             if (category == null)
             {
                 return NotFound();
             }
 
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            await _categoryRepository.DeleteAsync(category);
 
             return NoContent();
-        }
-
-        private bool CategoryExists(int id)
-        {
-            return _context.Categories.Any(e => e.Id == id);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace SmartInventoryBE.Interfaces.RepositoryInterfaces
             int take,
             IList<string> navigationPropertyPaths = null,
             Dictionary<string, bool> sortValue = null);
-        Task<T> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id);
         Task<T> GetByIdAsync(int id, List<string> includes);
         Task<T> InsertAsync(T entity);
         Task<int> InsertManyAsync(IEnumerable<T> entities);

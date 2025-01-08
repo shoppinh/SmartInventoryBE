@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartInventoryBE.Models;
 
@@ -11,9 +12,11 @@ using SmartInventoryBE.Models;
 namespace SmartInventoryBE.Migrations
 {
     [DbContext(typeof(SmartInventoryContext))]
-    partial class SmartInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20250101152007_IdentityImplementation")]
+    partial class IdentityImplementation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,20 +50,6 @@ namespace SmartInventoryBE.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "083166a7-1da7-4f5c-b88e-4f2963b9dcda",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "a06bcd02-c5c5-4786-8193-dd23cdf8cb64",
-                            Name = "User",
-                            NormalizedName = "USER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -245,12 +234,16 @@ namespace SmartInventoryBE.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId1")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LogId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Logs");
                 });
@@ -278,7 +271,11 @@ namespace SmartInventoryBE.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId1")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("OrderId");
@@ -289,7 +286,7 @@ namespace SmartInventoryBE.Migrations
                     b.HasIndex("ShippingId")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Orders");
                 });
@@ -428,14 +425,18 @@ namespace SmartInventoryBE.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId1")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("ReviewId");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Reviews");
                 });
@@ -630,7 +631,9 @@ namespace SmartInventoryBE.Migrations
                 {
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Logs")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -651,7 +654,9 @@ namespace SmartInventoryBE.Migrations
 
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Orders")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PaymentTransaction");
 
@@ -700,7 +705,9 @@ namespace SmartInventoryBE.Migrations
 
                     b.HasOne("SmartInventoryBE.Models.User", "User")
                         .WithMany("Reviews")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
 
