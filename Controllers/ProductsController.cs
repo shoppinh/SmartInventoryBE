@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartInventoryBE.Interfaces.RepositoryInterfaces;
 using SmartInventoryBE.Mappers;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
@@ -17,10 +13,12 @@ namespace SmartInventoryBE.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly SmartInventoryContext _context;
+        private readonly ICategoryRepository _categoryRepo;
 
-        public ProductsController(SmartInventoryContext context)
+        public ProductsController(SmartInventoryContext context, ICategoryRepository categoryRepo)
         {
             _context = context;
+            _categoryRepo = categoryRepo;
         }
 
         // GET: api/Products
@@ -35,7 +33,7 @@ namespace SmartInventoryBE.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
-            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.ProductId == id);
+            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
@@ -50,7 +48,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct([FromRoute] int id, [FromBody] UpdateProductRequestDto productDto)
         {
-            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.ProductId == id);
+            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -81,7 +79,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(CreateProductRequestDto productDto)
         {
-            var category = await _context.Categories.FindAsync(productDto.CategoryId);
+            var category = await _categoryRepo.GetByIdAsync(productDto.CategoryId);
             if (category == null)
             {
                 return NotFound(new { Message = $"Category with ID {productDto.CategoryId} was not found.", ErrorCode = 404 });
@@ -91,7 +89,7 @@ namespace SmartInventoryBE.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, product.ToProductDto());
+            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product.ToProductDto());
         }
 
         // DELETE: api/Products/5
@@ -112,7 +110,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool ProductExists(int id)
         {
-            return _context.Products.Any(e => e.ProductId == id);
+            return _context.Products.Any(e => e.Id == id);
         }
     }
 }

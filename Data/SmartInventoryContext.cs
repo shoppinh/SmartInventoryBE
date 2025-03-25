@@ -16,7 +16,7 @@ public class SmartInventoryContext : IdentityDbContext<User>
     public DbSet<Product> Products { get; set; }
     public DbSet<Inventory> Inventories { get; set; }
     public DbSet<Order> Orders { get; set; }
-    public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<OrderProduct> OrderProducts { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Log> Logs { get; set; }
     public DbSet<PaymentTransaction> PaymentTransaction { get; set; }

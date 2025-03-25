@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartInventoryBE.Models;
@@ -46,7 +41,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutInventory(int id, Inventory inventory)
         {
-            if (id != inventory.InventoryId)
+            if (id != inventory.Id)
             {
                 return BadRequest();
             }
@@ -80,7 +75,7 @@ namespace SmartInventoryBE.Controllers
             _context.Inventories.Add(inventory);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetInventory", new { id = inventory.InventoryId }, inventory);
+            return CreatedAtAction("GetInventory", new { id = inventory.Id }, inventory);
         }
 
         // DELETE: api/Inventory/5
@@ -101,7 +96,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool InventoryExists(int id)
         {
-            return _context.Inventories.Any(e => e.InventoryId == id);
+            return _context.Inventories.Any(e => e.Id == id);
         }
     }
 }

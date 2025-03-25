@@ -10,12 +10,12 @@ public static class ProductMappers
     {
         return new ProductDto
         {
-            ProductId = product.ProductId,
-            ProductName = product.ProductName,
-            ProductDescription = product.ProductDescription,
-            ProductPrice = product.ProductPrice,
+            ProductId = product.Id,
+            ProductName = product.Name,
+            ProductDescription = product.Description,
+            ProductPrice = product.Price,
             ProductStock = product.ProductStock,
-            ProductImage = product.ProductImage,
+            ProductImage = product.Image,
             Category = product.Category.ToCategoryDto(),
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt
@@ -26,11 +26,11 @@ public static class ProductMappers
     {
         return new Product
         {
-            ProductName = productDto.ProductName,
-            ProductDescription = productDto.ProductDescription,
-            ProductPrice = productDto.ProductPrice,
+            Name = productDto.ProductName,
+            Description = productDto.ProductDescription,
+            Price = productDto.ProductPrice,
             ProductStock = productDto.ProductStock,
-            ProductImage = productDto.ProductImage,
+            Image = productDto.ProductImage,
             CategoryId = productDto.CategoryId,
             Category = category
         };
@@ -39,11 +39,11 @@ public static class ProductMappers
     public static Product ToProductFromUpdateDTO(this UpdateProductRequestDto productDto, Product currProduct, Category? category)
     {
 
-        currProduct.ProductName = productDto.ProductName ?? currProduct.ProductName;
-        currProduct.ProductDescription = productDto.ProductDescription ?? currProduct.ProductDescription;
-        currProduct.ProductPrice = productDto.ProductPrice ?? currProduct.ProductPrice;
+        currProduct.Name = productDto.ProductName ?? currProduct.Name;
+        currProduct.Description = productDto.ProductDescription ?? currProduct.Description;
+        currProduct.Price = productDto.ProductPrice ?? currProduct.Price;
         currProduct.ProductStock = productDto.ProductStock ?? currProduct.ProductStock;
-        currProduct.ProductImage = productDto.ProductImage ?? currProduct.ProductImage;
+        currProduct.Image = productDto.ProductImage ?? currProduct.Image;
         currProduct.Category = category ?? currProduct.Category;
         currProduct.UpdatedAt = DateTime.Now;
         return currProduct;

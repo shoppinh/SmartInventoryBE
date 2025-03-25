@@ -15,6 +15,6 @@ public class ProductDto
     public DateTime UpdatedAt { get; set; }
     // public Category Category { get; set; }
     // public Inventory Inventory { get; set; }
-    // public List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    // public List<OrderProduct> OrderDetails { get; set; } = new List<OrderProduct>();
     // public List<Review> Reviews { get; set; } = new List<Review>();
 }
