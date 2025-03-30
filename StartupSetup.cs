@@ -35,6 +35,8 @@ namespace SmartInventoryBE
             service.AddTransient<ITokenService, TokenService>();
             service.AddTransient<ICacheService, CacheService>();
             service.AddTransient<IIoTService, IoTService>();
+            service.AddScoped<IWorkContextService, WorkContextService>();
+            service.AddHttpContextAccessor();
         }
 
         public static void AddIdentity(this IServiceCollection services, IConfigurationSection? jwtConfigurationSection)

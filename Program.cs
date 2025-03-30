@@ -87,6 +87,9 @@ app.UseCors("DevCorsPolicy");
 
 app.UseAuthentication();
 
+// Add WorkContextMiddleware after authentication
+app.UseMiddleware<WorkContextMiddleware>();
+
 app.UseAuthorization();
 
 app.UseMiddleware<GlobalExceptionHandler>();

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using SmartInventoryBE.Interfaces.Services;
+using SmartInventoryBE.Models;
+using WeSpace.Core.ProjectAggregate.Constants;
 using WeSpace.Core.ProjectAggregate.ViewModels.Response;
 
 namespace Smart_Inventory_BE.Controllers.Base
@@ -10,23 +13,23 @@ namespace Smart_Inventory_BE.Controllers.Base
     [ApiController]
     public class ApiControllerBase : ControllerBase
     {
-        // protected readonly IUserRepository UserRepository;
+        protected readonly IWorkContextService _workContextService;
 
-        // public ApiControllerBase(IUserRepository userRepository)
-        // {
-        //     UserRepository = userRepository;
-        // }
+        public ApiControllerBase(IWorkContextService workContextService)
+        {
+            _workContextService = workContextService;
+        }
 
-        // protected WorkContext? GetCurrentUserContext(bool isLoginRequired = true)
-        // {
-        //     var currentUser = HttpContext.Items[nameof(WorkContext)] as WorkContext;
-        //     if (isLoginRequired && (currentUser is null || currentUser!.CurrentUser is null))
-        //     {
-        //         throw new UnauthorizedAccessException(message: ApiResponseMessageConstant.AuthControllerBase_AccessIsDenied);
-        //     }
+        protected WorkContext? GetCurrentUserContext(bool isLoginRequired = true)
+        {
+            var currentUser = _workContextService.GetContext();
+            if (isLoginRequired && (currentUser is null || !currentUser.IsAuthenticated))
+            {
+                throw new UnauthorizedAccessException(message: ApiResponseMessageConstant.AuthControllerBase_AccessIsDenied);
+            }
 
-        //     return currentUser;
-        // }
+            return currentUser;
+        }
 
         protected ApiResponse<T> CreateResponse<T>(bool isSuccess, T data, string messageCode, string message)
         {
