@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ namespace SmartInventoryBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ShippingsController : ControllerBase
     {
         private readonly SmartInventoryContext _context;
@@ -46,7 +48,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutShipping(int id, Shipping shipping)
         {
-            if (id != shipping.ShippingId)
+            if (id != shipping.Id)
             {
                 return BadRequest();
             }
@@ -80,7 +82,7 @@ namespace SmartInventoryBE.Controllers
             _context.Shipping.Add(shipping);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetShipping", new { id = shipping.ShippingId }, shipping);
+            return CreatedAtAction("GetShipping", new { id = shipping.Id }, shipping);
         }
 
         // DELETE: api/Shippings/5
@@ -101,7 +103,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool ShippingExists(int id)
         {
-            return _context.Shipping.Any(e => e.ShippingId == id);
+            return _context.Shipping.Any(e => e.Id == id);
         }
     }
 }

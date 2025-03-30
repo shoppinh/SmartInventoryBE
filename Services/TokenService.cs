@@ -1,0 +1,79 @@
+﻿using Microsoft.IdentityModel.Tokens;
+using SmartInventoryBE.Interfaces.Services;
+using SmartInventoryBE.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Security.Cryptography;
+
+namespace SmartInventoryBE.Services
+{
+    public class TokenService : ITokenService
+    {
+        private readonly IConfiguration _configuration;
+        private readonly SymmetricSecurityKey _key;
+
+        public TokenService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"] ?? string.Empty));
+        }
+
+        public string CreateToken(User user)
+        {
+            if (user is not { UserName: not null, Email: not null }) return string.Empty;
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.NameId, user.Id),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email)
+            };
+
+            var credentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(7),
+                SigningCredentials = credentials,
+                Issuer = _configuration["JWT:Issuer"],
+                Audience = _configuration["JWT:Audience"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        public bool ValidateToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _key,
+                    ValidateIssuer = true,
+                    ValidIssuer = _configuration["JWT:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["JWT:Audience"],
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static string GenerateRefreshToken()
+        {
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+        }
+    }
+}

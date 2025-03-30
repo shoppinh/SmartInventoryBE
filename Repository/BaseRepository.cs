@@ -130,13 +130,10 @@ namespace SmartInventoryBE.Repository
                 .ToListAsync();
         }
 
-        public virtual async Task<T> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
-            T model = await _context.Set<T>().FindAsync(id);
-            if (model != null && model.IsDeleted)
-                return null;
-
-            return model;
+            var model = await _context.Set<T>().FindAsync(id);
+            return model is { IsDeleted: true } ? null : model;
         }
 
         public async Task<T> GetByIdAsync(int id, List<string> includes)

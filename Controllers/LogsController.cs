@@ -46,7 +46,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutLog(int id, Log log)
         {
-            if (id != log.LogId)
+            if (id != log.Id)
             {
                 return BadRequest();
             }
@@ -80,7 +80,7 @@ namespace SmartInventoryBE.Controllers
             _context.Logs.Add(log);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetLog", new { id = log.LogId }, log);
+            return CreatedAtAction("GetLog", new { id = log.Id }, log);
         }
 
         // DELETE: api/Logs/5
@@ -101,7 +101,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool LogExists(int id)
         {
-            return _context.Logs.Any(e => e.LogId == id);
+            return _context.Logs.Any(e => e.Id == id);
         }
     }
 }

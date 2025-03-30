@@ -1,22 +1,22 @@
-using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SmartInventoryBE.Models;
 
-public class Product
+[Table("Products")]
+public class Product : BaseEntity
 {
-    public int ProductId { get; set; }
-    public string ProductName { get; set; } = string.Empty;
-    public string ProductDescription { get; set; } = string.Empty;
+    [Column(TypeName = "varchar(200)")]
+    public string Name { get; set; } = string.Empty;
+    [Column(TypeName = "varchar(400)")]
+    public string Description { get; set; } = string.Empty;
     [Column(TypeName = "decimal(10,2)")]
-    public decimal ProductPrice { get; set; }
+    public decimal Price { get; set; }
     public int ProductStock { get; set; }
-    public string ProductImage { get; set; } = string.Empty;
+    [Column(TypeName = "varchar(200)")]
+    public string Image { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public required Category Category { get; set; }
     public Inventory? Inventory { get; set; }
-    public List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    public List<OrderProduct> OrderDetails { get; set; } = new List<OrderProduct>();
     public List<Review> Reviews { get; set; } = new List<Review>();
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }
