@@ -26,11 +26,15 @@ namespace SmartInventoryBE
         {
             service.AddTransient(typeof(IRepository<>), typeof(BaseRepository<>));
             service.AddTransient(typeof(ICategoryRepository), typeof(CategoryRepository));
+            service.AddTransient(typeof(IProductRepository), typeof(ProductRepository));
+            service.AddTransient(typeof(IInventoryRepository), typeof(InventoryRepository));
         }
 
         public static void AddServices(this IServiceCollection service)
         {
             service.AddTransient<ITokenService, TokenService>();
+            service.AddTransient<ICacheService, CacheService>();
+            service.AddTransient<IIoTService, IoTService>();
         }
 
         public static void AddIdentity(this IServiceCollection services, IConfigurationSection? jwtConfigurationSection)

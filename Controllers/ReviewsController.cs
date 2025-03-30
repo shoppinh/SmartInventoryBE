@@ -46,7 +46,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutReview(int id, Review review)
         {
-            if (id != review.ReviewId)
+            if (id != review.Id)
             {
                 return BadRequest();
             }
@@ -80,7 +80,7 @@ namespace SmartInventoryBE.Controllers
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReview", new { id = review.ReviewId }, review);
+            return CreatedAtAction("GetReview", new { id = review.Id }, review);
         }
 
         // DELETE: api/Reviews/5
@@ -101,7 +101,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool ReviewExists(int id)
         {
-            return _context.Reviews.Any(e => e.ReviewId == id);
+            return _context.Reviews.Any(e => e.Id == id);
         }
     }
 }

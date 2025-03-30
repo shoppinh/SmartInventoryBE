@@ -1,69 +1,75 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Smart_Inventory_BE.Controllers.Base;
+using SmartInventoryBE.Extensions;
 using SmartInventoryBE.Interfaces.RepositoryInterfaces;
-using SmartInventoryBE.Mappers;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
 using SmartInventoryBE.ProjectAggregate.Response;
+using WeSpace.Core.ProjectAggregate.Constants;
+using WeSpace.Core.ProjectAggregate.ViewModels.Response;
 
 namespace SmartInventoryBE.Controllers
 {
     [Route("api/Products")]
     [ApiController]
-    public class ProductsController : ControllerBase
+    public class ProductsController : ApiControllerBase
     {
         private readonly SmartInventoryContext _context;
         private readonly ICategoryRepository _categoryRepo;
+        private readonly IMapper _mapper;
 
-        public ProductsController(SmartInventoryContext context, ICategoryRepository categoryRepo)
+        public ProductsController(SmartInventoryContext context, ICategoryRepository categoryRepo, IMapper mapper)
         {
             _context = context;
             _categoryRepo = categoryRepo;
+            _mapper = mapper;
         }
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+        public async Task<ApiResponse<IEnumerable<ProductResponse>>> GetProducts()
         {
             var products = await _context.Products.Include(p => p.Category).ToListAsync();
-            return Ok(products.Select(p => p.ToProductDto()));
+            return CreateSuccessResponse(_mapper.Map<IEnumerable<ProductResponse>>(products), nameof(ApiResponseMessageConstant.Product_GetSuccess), ApiResponseMessageConstant.Product_GetSuccess);
         }
 
         // GET: api/Products/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProductDto>> GetProduct(int id)
+        public async Task<ApiResponse<ProductResponse>> GetProduct(int id)
         {
             var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
-                return NotFound();
+                return CreateResponse<ProductResponse>(false, null, nameof(ApiResponseMessageConstant.Product_GetNotFound), ApiResponseMessageConstant.Product_GetNotFound);
             }
 
-            return Ok(product.ToProductDto());
+            return CreateSuccessResponse(_mapper.Map<ProductResponse>(product), nameof(ApiResponseMessageConstant.Product_GetSuccess), ApiResponseMessageConstant.Product_GetSuccess);
         }
 
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct([FromRoute] int id, [FromBody] UpdateProductRequestDto productDto)
+        public async Task<ApiResponse<ProductResponse>> PutProduct([FromRoute] int id, [FromBody] UpdateProductRequest productRequest)
         {
             var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
-                return NotFound();
+                return CreateResponse<ProductResponse>(false, null, nameof(ApiResponseMessageConstant.Product_GetNotFound), ApiResponseMessageConstant.Product_GetNotFound);
             }
 
             try
             {
-                productDto.ToProductFromUpdateDTO(product, null);
+                _mapper.Map(productRequest, product);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!ProductExists(id))
                 {
-                    return NotFound();
+                    return CreateResponse<ProductResponse>(false, null, nameof(ApiResponseMessageConstant.Product_GetNotFound), ApiResponseMessageConstant.Product_GetNotFound);
                 }
                 else
                 {
@@ -71,41 +77,43 @@ namespace SmartInventoryBE.Controllers
                 }
             }
 
-            return Ok(product.ToProductDto());
+            return CreateSuccessResponse(_mapper.Map<ProductResponse>(product), nameof(ApiResponseMessageConstant.Product_UpdateSuccess), ApiResponseMessageConstant.Product_UpdateSuccess);
         }
 
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(CreateProductRequestDto productDto)
+        public async Task<ApiResponse<ProductResponse>> PostProduct(CreateProductRequest productRequest)
         {
-            var category = await _categoryRepo.GetByIdAsync(productDto.CategoryId);
+            var category = await _categoryRepo.GetByIdAsync(productRequest.CategoryId);
             if (category == null)
             {
-                return NotFound(new { Message = $"Category with ID {productDto.CategoryId} was not found.", ErrorCode = 404 });
+                return CreateResponse<ProductResponse>(false, null, nameof(ApiResponseMessageConstant.Product_GetNotFound), ApiResponseMessageConstant.Product_GetNotFound);
             }
-            var product = productDto.ToProductFromCreateDTO(category);
+            
+            var product = _mapper.Map<Product>(productRequest);
+            product.Category = category;
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product.ToProductDto());
+            return CreateSuccessResponse(_mapper.Map<ProductResponse>(product), nameof(ApiResponseMessageConstant.Product_AddSuccess), ApiResponseMessageConstant.Product_AddSuccess);
         }
 
         // DELETE: api/Products/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
+        public async Task<ApiResponse> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return NotFound();
+                return CreateResponse<ProductResponse>(false, null, nameof(ApiResponseMessageConstant.Product_GetNotFound), ApiResponseMessageConstant.Product_GetNotFound);
             }
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return CreateSuccessResponse(nameof(ApiResponseMessageConstant.Product_DeleteSuccess), ApiResponseMessageConstant.Product_DeleteSuccess);
         }
 
         private bool ProductExists(int id)

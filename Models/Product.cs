@@ -1,10 +1,9 @@
-using SmartInventoryBE.ProjectAggregate.ViewModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SmartInventoryBE.Models;
 
 [Table("Products")]
-public class Product : GenericBaseEntity<ProductModel, Product>
+public class Product : BaseEntity
 {
     [Column(TypeName = "varchar(200)")]
     public string Name { get; set; } = string.Empty;

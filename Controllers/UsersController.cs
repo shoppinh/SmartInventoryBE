@@ -25,7 +25,7 @@ namespace SmartInventoryBE.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace SmartInventoryBE.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
             try
             {
@@ -73,7 +73,7 @@ namespace SmartInventoryBE.Controllers
                 if (!result.Succeeded) return Unauthorized("Username not found and/or password is not correct");
 
 
-                return Ok(new UserDto()
+                return Ok(new UserResponse()
                 {
                     Id = user.Id,
                     Email = user.Email,

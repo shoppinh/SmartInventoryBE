@@ -1,6 +1,6 @@
-﻿namespace SmartInventoryBE.ProjectAggregate.Response
+namespace SmartInventoryBE.ProjectAggregate.Response
 {
-    public class UserDto
+    public class UserResponse
     {
         public string Id { get; set; }
         public string? Email { get; set; } = string.Empty;
@@ -13,4 +13,4 @@
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public string Token { get; set; } = string.Empty;
     }
-}
+} 

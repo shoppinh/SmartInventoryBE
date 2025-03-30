@@ -2,7 +2,7 @@ using System;
 
 namespace SmartInventoryBE.ProjectAggregate.Request;
 
-public class CreateProductRequestDto
+public class CreateProductRequest
 {
     public required string ProductName { get; set; }
     public required string ProductDescription { get; set; }
@@ -10,4 +10,4 @@ public class CreateProductRequestDto
     public required int ProductStock { get; set; }
     public required string ProductImage { get; set; }
     public required int CategoryId { get; set; }
-}
+} 

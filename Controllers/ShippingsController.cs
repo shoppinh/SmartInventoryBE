@@ -46,7 +46,7 @@ namespace SmartInventoryBE.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutShipping(int id, Shipping shipping)
         {
-            if (id != shipping.ShippingId)
+            if (id != shipping.Id)
             {
                 return BadRequest();
             }
@@ -80,7 +80,7 @@ namespace SmartInventoryBE.Controllers
             _context.Shipping.Add(shipping);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetShipping", new { id = shipping.ShippingId }, shipping);
+            return CreatedAtAction("GetShipping", new { id = shipping.Id }, shipping);
         }
 
         // DELETE: api/Shippings/5
@@ -101,7 +101,7 @@ namespace SmartInventoryBE.Controllers
 
         private bool ShippingExists(int id)
         {
-            return _context.Shipping.Any(e => e.ShippingId == id);
+            return _context.Shipping.Any(e => e.Id == id);
         }
     }
 }

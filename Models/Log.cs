@@ -1,8 +1,7 @@
 namespace SmartInventoryBE.Models;
 
-public class Log
+public class Log: BaseEntity
 {
-    public int LogId { get; set; }
     public required User User { get; set; }
     public string Action { get; set; } = string.Empty;
     public DateTime ActionDate { get; set; }

@@ -1,6 +1,9 @@
-﻿namespace SmartInventoryBE.Interfaces.RepositoryInterfaces
+﻿using SmartInventoryBE.Models;
+
+namespace SmartInventoryBE.Interfaces.RepositoryInterfaces
 {
-    public interface IInventoryRepository
+    public interface IInventoryRepository : IRepository<Inventory>
     {
+        IQueryable<Inventory> Inventories { get; }
     }
 }

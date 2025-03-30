@@ -1,10 +1,9 @@
-using SmartInventoryBE.ProjectAggregate.ViewModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SmartInventoryBE.Models;
 
 [Table("Orders")]
-public class Order : GenericBaseEntity<OrderModel, Order>
+public class Order : BaseEntity
 {
     public int UserId { get; set; }
     public required User User { get; set; }

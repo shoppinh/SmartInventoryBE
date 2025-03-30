@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SmartInventoryBE.ProjectAggregate.Request
 {
-    public class RegisterRequestDto
+    public class RegisterRequest
     {
         [Required]
         public string? Username { get; set; }
@@ -12,4 +12,4 @@ namespace SmartInventoryBE.ProjectAggregate.Request
         [Required]
         public required string Password { get; set; }
     }
-}
+} 
