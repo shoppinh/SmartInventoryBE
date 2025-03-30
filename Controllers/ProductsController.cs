@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Smart_Inventory_BE.Controllers.Base;
 using SmartInventoryBE.Extensions;
 using SmartInventoryBE.Interfaces.RepositoryInterfaces;
+using SmartInventoryBE.Interfaces.Services;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
 using SmartInventoryBE.ProjectAggregate.Response;
@@ -20,7 +21,8 @@ namespace SmartInventoryBE.Controllers
         private readonly ICategoryRepository _categoryRepo;
         private readonly IMapper _mapper;
 
-        public ProductsController(SmartInventoryContext context, ICategoryRepository categoryRepo, IMapper mapper)
+        public ProductsController(SmartInventoryContext context, ICategoryRepository categoryRepo, IMapper mapper, IWorkContextService workContextService)
+            : base(workContextService)
         {
             _context = context;
             _categoryRepo = categoryRepo;

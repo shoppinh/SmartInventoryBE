@@ -7,6 +7,7 @@ using Smart_Inventory_BE.Controllers.Base;
 using SmartInventoryBE.Extensions;
 using SmartInventoryBE.Hubs;
 using SmartInventoryBE.Interfaces.RepositoryInterfaces;
+using SmartInventoryBE.Interfaces.Services;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
 using SmartInventoryBE.ProjectAggregate.Response;
@@ -34,7 +35,9 @@ namespace SmartInventoryBE.Controllers
             IProductRepository productRepository,
             ILogger<InventoryController> logger,
             IInventoryRepository inventoryRepository,
+            IWorkContextService workContextService,
             IMapper mapper)
+            : base(workContextService)
         {
             _context = context;
             _hubContext = hubContext;

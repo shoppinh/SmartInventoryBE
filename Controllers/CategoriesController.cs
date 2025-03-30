@@ -5,6 +5,7 @@ using Smart_Inventory_BE.Controllers.Base;
 using SmartInventoryBE.Extensions;
 using SmartInventoryBE.Hubs;
 using SmartInventoryBE.Interfaces.RepositoryInterfaces;
+using SmartInventoryBE.Interfaces.Services;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.ProjectAggregate.Request;
 using SmartInventoryBE.ProjectAggregate.Response;
@@ -22,7 +23,8 @@ namespace SmartInventoryBE.Controllers
         private readonly IHubContext<InventoryHub> _hubContext;
         private readonly IMapper _mapper;
 
-        public CategoriesController(ICategoryRepository categoryRepository, IHubContext<InventoryHub> hubContext, IMapper mapper)
+        public CategoriesController(ICategoryRepository categoryRepository, IHubContext<InventoryHub> hubContext, IMapper mapper, IWorkContextService workContextService)
+            : base(workContextService)
         {
             _categoryRepository = categoryRepository;
             _hubContext = hubContext;
