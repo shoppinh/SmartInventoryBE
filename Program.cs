@@ -1,9 +1,9 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SmartInventoryBE;
 using SmartInventoryBE.Hubs;
 using SmartInventoryBE.Middleware;
-using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -13,6 +13,7 @@ builder.Services.AddDbContext(builder.Configuration.GetConnectionString("Default
 builder.Services.AddIdentity(builder.Configuration.GetSection("JWT"));
 builder.Services.AddRepositories();
 builder.Services.AddServices();
+builder.Services.RegisterAppSettings(builder.Configuration);
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
