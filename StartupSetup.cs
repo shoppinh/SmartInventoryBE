@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +8,7 @@ using SmartInventoryBE.Interfaces.Services;
 using SmartInventoryBE.Models;
 using SmartInventoryBE.Repository;
 using SmartInventoryBE.Services;
-using System.Text;
+using SmartInventoryBE.Settings;
 
 namespace SmartInventoryBE
 {
@@ -75,6 +76,11 @@ namespace SmartInventoryBE
                 };
                 opts.UseSecurityTokenValidators = true;
             });
+        }
+
+        public static void RegisterAppSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<GeneralSettings>(configuration.GetSection(GeneralSettings.SectionName));
         }
     }
 }
