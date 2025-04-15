@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+﻿﻿﻿using System.Linq.Expressions;
 
 namespace SmartInventoryBE.Extensions
 {
@@ -12,14 +12,14 @@ namespace SmartInventoryBE.Extensions
         /// <returns>The extracted textual representation of the expression's path.</returns>
         public static string AsPath(this LambdaExpression? expression)
         {
-            if (expression == null)
+            if (expression is null)
             {
-                return null;
+                return "";
             }
 
             TryParsePath(expression.Body, out var path);
 
-            return path;
+            return path ?? "";
         }
 
         /// <summary>
@@ -34,65 +34,101 @@ namespace SmartInventoryBE.Extensions
             var noConvertExp = RemoveConvertOperations(expression);
             path = null;
 
-            switch (noConvertExp)
+            if (noConvertExp is MemberExpression memberExpression)
             {
-                case MemberExpression memberExpression:
-                    {
-                        var currentPart = memberExpression.Member.Name;
-
-                        if (!TryParsePath(memberExpression.Expression, out var parentPart))
-                        {
-                            return false;
-                        }
-
-                        path = string.IsNullOrEmpty(parentPart) ? currentPart : string.Concat(parentPart, ".", currentPart);
-                        break;
-                    }
-
-                case MethodCallExpression callExpression:
-                    switch (callExpression.Method.Name)
-                    {
-                        case nameof(Queryable.Select) when callExpression.Arguments.Count == 2:
-                            {
-                                if (!TryParsePath(callExpression.Arguments[0], out var parentPart))
-                                {
-                                    return false;
-                                }
-
-                                if (string.IsNullOrEmpty(parentPart))
-                                {
-                                    return false;
-                                }
-
-                                if (!(callExpression.Arguments[1] is LambdaExpression subExpression))
-                                {
-                                    return false;
-                                }
-
-                                if (!TryParsePath(subExpression.Body, out var currentPart))
-                                {
-                                    return false;
-                                }
-
-                                if (string.IsNullOrEmpty(parentPart))
-                                {
-                                    return false;
-                                }
-
-                                path = string.Concat(parentPart, ".", currentPart);
-                                return true;
-                            }
-
-                        case nameof(Queryable.Where):
-                            throw new NotSupportedException("Filtering an Include expression is not supported");
-                        case nameof(Queryable.OrderBy):
-                        case nameof(Queryable.OrderByDescending):
-                            throw new NotSupportedException("Ordering an Include expression is not supported");
-                        default:
-                            return false;
-                    }
+                return TryParseMemberExpression(memberExpression, out path);
             }
 
+            if (noConvertExp is MethodCallExpression methodCallExpression)
+            {
+                return TryParseMethodCallExpression(methodCallExpression, out path);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Parses a MemberExpression to extract the property path.
+        /// </summary>
+        /// <param name="memberExpression">The MemberExpression to parse.</param>
+        /// <param name="path">The extracted textual representation of the member expression's path.</param>
+        /// <returns>True if the parse operation succeeds; otherwise, false.</returns>
+        private static bool TryParseMemberExpression(MemberExpression memberExpression, out string? path)
+        {
+            var currentPart = memberExpression.Member.Name;
+
+            if (memberExpression.Expression is null || !TryParsePath(memberExpression.Expression, out var parentPart))
+            {
+                path = null;
+                return false;
+            }
+
+            path = string.IsNullOrEmpty(parentPart) ? currentPart : $"{parentPart}.{currentPart}";
+            return true;
+        }
+
+        /// <summary>
+        ///     Parses a MethodCallExpression to extract the property path.
+        /// </summary>
+        /// <param name="methodCallExpression">The MethodCallExpression to parse.</param>
+        /// <param name="path">The extracted textual representation of the method call expression's path.</param>
+        /// <returns>True if the parse operation succeeds; otherwise, false.</returns>
+        private static bool TryParseMethodCallExpression(MethodCallExpression methodCallExpression, out string? path)
+        {
+            switch (methodCallExpression.Method.Name)
+            {
+                case nameof(Queryable.Select) when methodCallExpression.Arguments.Count == 2:
+                    return TryParseSelectMethod(methodCallExpression, out path);
+                case nameof(Queryable.Where):
+                    throw new NotSupportedException("Filtering an Include expression is not supported");
+                case nameof(Queryable.OrderBy):
+                case nameof(Queryable.OrderByDescending):
+                    throw new NotSupportedException("Ordering an Include expression is not supported");
+                default:
+                    path = null;
+                    return false;
+            }
+        }
+
+        /// <summary>
+        ///     Parses a Select MethodCallExpression to extract the property path.
+        /// </summary>
+        /// <param name="selectExpression">The MethodCallExpression representing a Select method call to parse.</param>
+        /// <param name="path">The extracted textual representation of the select method call expression's path.</param>
+        /// <returns>True if the parse operation succeeds; otherwise, false.</returns>
+        private static bool TryParseSelectMethod(MethodCallExpression selectExpression, out string? path)
+        {
+            if (!TryParsePath(selectExpression.Arguments[0], out var parentPart))
+            {
+                path = null;
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(parentPart))
+            {
+                path = null;
+                return false;
+            }
+
+            if (!(selectExpression.Arguments[1] is LambdaExpression subExpression))
+            {
+                path = null;
+                return false;
+            }
+
+            if (!TryParsePath(subExpression.Body, out var currentPart))
+            {
+                path = null;
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(currentPart))
+            {
+                path = null;
+                return false;
+            }
+
+            path = $"{parentPart}.{currentPart}";
             return true;
         }
 

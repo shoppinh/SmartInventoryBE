@@ -12,20 +12,20 @@ namespace SmartInventoryBE.Repository
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
     {
-        protected readonly GeneralSettings _generalSettings;
-        protected readonly SmartInventoryContext _context;
-        protected readonly DbSet<TEntity> _dbSet;
+        protected readonly GeneralSettings GeneralSettings;
+        protected readonly SmartInventoryContext Context;
+        protected readonly DbSet<TEntity> DbSet;
 
         protected GenericRepository(IOptions<GeneralSettings> generalSettings, SmartInventoryContext dbContent)
         {
-            _generalSettings = generalSettings.Value;
-            _context = dbContent;
-            _dbSet = _context.Set<TEntity>();
+            GeneralSettings = generalSettings.Value;
+            Context = dbContent;
+            DbSet = Context.Set<TEntity>();
         }
 
         protected IQueryable<TEntity> InitializeQueryAsNoTracking()
         {
-            return _dbSet.AsNoTracking();
+            return DbSet.AsNoTracking();
         }
         protected virtual IQueryable<TEntity> Includes()
         {
@@ -155,14 +155,14 @@ namespace SmartInventoryBE.Repository
             throw new NotImplementedException();
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.SearchAllAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<IList<TEntity>>  SearchAllAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            return await HandleSearchAllAsync(criteria, Query(includes));
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.SearchAllAsync(SearchCriteria? criteria)
+        public virtual async Task<IList<TEntity>> SearchAllAsync(SearchCriteria? criteria = null)
         {
-            throw new NotImplementedException();
+            return await HandleSearchAllAsync(criteria ?? new SearchCriteria(), Includes());
         }
 
         Task<IList<TDestination>> IGenericRepository<TEntity>.SearchAllWithProjectionASync<TDestination>(Expression<Func<TEntity, TDestination>> projection, SearchCriteria? criteria)
@@ -193,6 +193,75 @@ namespace SmartInventoryBE.Repository
         Task IGenericRepository<TEntity>.UpdateAsync(TEntity entity)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Builds and modifies the provided query based on the given search criteria. 
+        /// This method can be overridden to apply additional query modifications like filtering, sorting, etc.
+        /// </summary>
+        /// <param name="query">
+        /// The initial query to modify.
+        /// </param>
+        /// <param name="criteria">
+        /// The search criteria used to modify the query (e.g., filtering, sorting).
+        /// </param>
+        /// <returns>
+        /// A modified query based on the search criteria.
+        /// </returns>
+        protected virtual IQueryable<TEntity> BuildQuery(IQueryable<TEntity> query, SearchCriteria criteria)
+        {
+            return query;
+        }
+
+        protected virtual IQueryable<TEntity> BuildSort(IQueryable<TEntity> query, SearchCriteria criteria)
+        {
+            return query;
+        }
+
+        private async Task<GenericSearchResult<TEntity>> HandleSearchAsync(SearchCriteria criteria, IQueryable<TEntity> query)
+        {
+            query = BuildQuery(query, criteria);
+            var result = new GenericSearchResult<TEntity>();
+            result.TotalCount = await query.CountAsync();
+            if (result.TotalCount == 0)
+            {
+                return result;
+            }
+
+            query = BuildSort(query, criteria);
+            result.Results = await query.Skip(criteria.Skip).Take(criteria.Take).ToListAsync();
+            return result;
+        }
+
+        private async Task<IList<TEntity>> HandleSearchAllAsync(SearchCriteria criteria, IQueryable<TEntity> query)
+        {
+            var result = new List<TEntity>();
+            criteria.Take = GeneralSettings.BatchSize;
+
+            query = BuildQuery(query, criteria);
+            var totalCount = await query.CountAsync();
+            if (totalCount == 0)
+            {
+                return result;
+            }
+
+            query = BuildSort(query, criteria);
+            var count = 0;
+
+            do
+            {
+                criteria.Skip = count;
+                var entities = await query.Skip(criteria.Skip).Take(criteria.Take).ToListAsync();
+                if (!entities.SafeAny())
+                {
+                    break;
+                }
+                count += entities.Count;
+                result.AddRange(entities);
+            }
+            while (count < totalCount);
+
+            return result;
         }
     }
 }
