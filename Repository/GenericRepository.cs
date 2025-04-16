@@ -13,14 +13,14 @@ namespace SmartInventoryBE.Repository
     public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
     {
         protected readonly GeneralSettings GeneralSettings;
-        protected readonly SmartInventoryContext Context;
+        protected readonly SmartInventoryContext DbContext;
         protected readonly DbSet<TEntity> DbSet;
 
         protected GenericRepository(IOptions<GeneralSettings> generalSettings, SmartInventoryContext dbContent)
         {
             GeneralSettings = generalSettings.Value;
-            Context = dbContent;
-            DbSet = Context.Set<TEntity>();
+            DbContext = dbContent;
+            DbSet = DbContext.Set<TEntity>();
         }
 
         protected IQueryable<TEntity> InitializeQueryAsNoTracking()
@@ -45,14 +45,23 @@ namespace SmartInventoryBE.Repository
             return query;
         }
 
-        Task IGenericRepository<TEntity>.AddAsync(IList<TEntity> entities)
+        public virtual async Task AddAsync(IList<TEntity> entities)
         {
-            throw new NotImplementedException();
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            foreach (var batch in entities.Batches(GeneralSettings.BatchSize))
+            {
+                await AddBatchAsync(batch);
+            }
         }
 
-        Task IGenericRepository<TEntity>.AddAsync(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity)
         {
-            throw new NotImplementedException();
+            await DbSet.AddAsync(entity);
+            await DbContext.SaveChangesAsync();
         }
 
         Task IGenericRepository<TEntity>.AddOrUpdateAsync(TEntity entity)
@@ -155,7 +164,7 @@ namespace SmartInventoryBE.Repository
             throw new NotImplementedException();
         }
 
-        public virtual async Task<IList<TEntity>>  SearchAllAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<IList<TEntity>> SearchAllAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
         {
             return await HandleSearchAllAsync(criteria, Query(includes));
         }
@@ -165,24 +174,71 @@ namespace SmartInventoryBE.Repository
             return await HandleSearchAllAsync(criteria ?? new SearchCriteria(), Includes());
         }
 
-        Task<IList<TDestination>> IGenericRepository<TEntity>.SearchAllWithProjectionASync<TDestination>(Expression<Func<TEntity, TDestination>> projection, SearchCriteria? criteria)
+        public virtual async Task<IList<TDestination>> SearchAllWithProjectionASync<TDestination>(
+            Expression<Func<TEntity, TDestination>> projection, SearchCriteria? criteria)
         {
-            throw new NotImplementedException();
+            var result = new List<TDestination>();
+            criteria ??= new SearchCriteria();
+            criteria.Take = GeneralSettings.BatchSize;
+
+            var query = BuildQuery(DbSet.AsQueryable(), criteria);
+            var totalCount = await query.CountAsync();
+            if (totalCount == 0)
+            {
+                return result;
+            }
+
+            query = BuildSort(query, criteria);
+
+            var count = 0;
+            do
+            {
+                criteria.Skip = count;
+                var entities = await query.Select(projection).Skip(criteria.Skip).Take(criteria.Take).ToListAsync();
+                if (!entities.SafeAny())
+                {
+                    break;
+                }
+
+                count += entities.Count;
+                result.AddRange(entities);
+            } 
+            while (count < totalCount);
+
+            return result;
         }
 
-        Task<GenericSearchResult<TEntity>> IGenericRepository<TEntity>.SearchAsync(SearchCriteria? criteria)
+        public virtual async Task<GenericSearchResult<TEntity>> SearchAsync(SearchCriteria? criteria = null)
         {
-            throw new NotImplementedException();
+            criteria ??= new SearchCriteria();
+            var query = Includes();
+            return await HandleSearchAsync(criteria, query);
         }
 
-        Task<GenericSearchResult<TEntity>> IGenericRepository<TEntity>.SearchAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<GenericSearchResult<TEntity>> SearchAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            return await HandleSearchAsync(criteria, Query(includes));
         }
 
-        Task<GenericSearchResult<TDestination>> IGenericRepository<TEntity>.SearchWithProjectionAsync<TDestination>(Expression<Func<TEntity, TDestination>> projection, SearchCriteria? criteria)
+        public virtual async Task<GenericSearchResult<TDestination>> SearchWithProjectionAsync<TDestination>(Expression<Func<TEntity, TDestination>> projection, SearchCriteria? criteria)
         {
-            throw new NotImplementedException();
+            var result = new GenericSearchResult<TDestination>();
+            criteria ??= new SearchCriteria();
+
+            var query = Includes();
+            query = BuildQuery(query, criteria);
+            result.TotalCount = await query.CountAsync();
+            if (result.TotalCount == 0)
+            {
+                return result;
+            }
+
+            query = BuildSort(query, criteria);
+
+            result.Results = await query.Select(projection).Skip(criteria.Skip).Take(criteria.Take).ToListAsync();
+
+            return result;
+
         }
 
         Task IGenericRepository<TEntity>.UpdateAsync(IList<TEntity> entities)
@@ -221,8 +277,10 @@ namespace SmartInventoryBE.Repository
         private async Task<GenericSearchResult<TEntity>> HandleSearchAsync(SearchCriteria criteria, IQueryable<TEntity> query)
         {
             query = BuildQuery(query, criteria);
-            var result = new GenericSearchResult<TEntity>();
-            result.TotalCount = await query.CountAsync();
+            var result = new GenericSearchResult<TEntity>
+            {
+                TotalCount = await query.CountAsync()
+            };
             if (result.TotalCount == 0)
             {
                 return result;
@@ -230,7 +288,9 @@ namespace SmartInventoryBE.Repository
 
             query = BuildSort(query, criteria);
             result.Results = await query.Skip(criteria.Skip).Take(criteria.Take).ToListAsync();
+
             return result;
+
         }
 
         private async Task<IList<TEntity>> HandleSearchAllAsync(SearchCriteria criteria, IQueryable<TEntity> query)
@@ -262,6 +322,21 @@ namespace SmartInventoryBE.Repository
             while (count < totalCount);
 
             return result;
+        }
+
+        private async Task AddBatchAsync(IList<TEntity> entities)
+        {
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            foreach (var entity in entities)
+            {
+                await DbSet.AddAsync(entity);
+            }
+
+            await DbContext.SaveChangesAsync();
         }
     }
 }
