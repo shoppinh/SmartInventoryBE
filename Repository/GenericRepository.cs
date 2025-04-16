@@ -64,49 +64,97 @@ namespace SmartInventoryBE.Repository
             await DbContext.SaveChangesAsync();
         }
 
-        Task IGenericRepository<TEntity>.AddOrUpdateAsync(TEntity entity)
+        public virtual async Task AddOrUpdateAsync(TEntity entity)
         {
-            throw new NotImplementedException();
+            await CreateOrUpdateEntryAsync(entity);
+            await DbContext.SaveChangesAsync();
         }
 
-        Task IGenericRepository<TEntity>.AddOrUpdateAsync(IList<TEntity> entities)
+        public virtual async Task AddOrUpdateAsync(IList<TEntity> entities)
         {
-            throw new NotImplementedException();
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+            foreach (var batch in entities.Batches(GeneralSettings.BatchSize))
+            {
+                await AddOrUpdateBatchAsync(batch);
+            }
+
         }
 
-        Task<int> IGenericRepository<TEntity>.CountAsync(SearchCriteria criteria)
+        public virtual async Task<int> CountAsync(SearchCriteria criteria)
         {
-            throw new NotImplementedException();
+            var query = InitializeQueryAsNoTracking();
+            query = BuildQuery(query, criteria);
+            return await query.CountAsync();
         }
 
-        Task<int> IGenericRepository<TEntity>.CountAsync(Expression<Func<TEntity, bool>> criteria)
+        public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>> criteria)
         {
-            throw new NotImplementedException();
+            return await InitializeQueryAsNoTracking().Where(criteria).CountAsync();
         }
 
-        Task IGenericRepository<TEntity>.DeleteAsync(Expression<Func<TEntity, bool>> criteria, bool isSoftDeleted)
+        public virtual async Task DeleteAsync(Expression<Func<TEntity, bool>> criteria, bool isSoftDeleted = false)
         {
-            throw new NotImplementedException();
+            if (isSoftDeleted)
+            {
+                await DbSet.Where(criteria).ExecuteUpdateAsync(x => x.SetProperty(p => p.IsDeleted, true));
+                return;
+
+            }
+
+            await DbSet.Where(criteria).ExecuteDeleteAsync();
         }
 
-        Task IGenericRepository<TEntity>.DeleteAsync(int id, bool isSoftDeleted)
+        public virtual async Task DeleteAsync(int id, bool isSoftDeleted = false)
         {
-            throw new NotImplementedException();
+            if (isSoftDeleted)
+            {
+                await DbSet.Where(x => x.Id == id).ExecuteUpdateAsync(x => x.SetProperty(p => p.IsDeleted, true));
+                return;
+            }
+            await DbSet.Where(x => x.Id == id).ExecuteDeleteAsync();
         }
 
-        Task IGenericRepository<TEntity>.DeleteAsync(IList<int> ids, bool isSoftDeleted)
+        public virtual async Task DeleteAsync(IList<int> ids, bool isSoftDeleted = false)
         {
-            throw new NotImplementedException();
+            if (isSoftDeleted)
+            {
+                await DbSet.Where(x => ids.Contains(x.Id)).ExecuteUpdateAsync(x => x.SetProperty(p => p.IsDeleted, true));
+                return;
+            }
+
+            await DbSet.Where(x => ids.Contains(x.Id)).ExecuteDeleteAsync();
         }
 
-        Task IGenericRepository<TEntity>.DeleteAsync(IList<TEntity> entities, bool isSoftDeleted)
+        public virtual async Task DeleteAsync(IList<TEntity> entities, bool isSoftDeleted = false)
         {
-            throw new NotImplementedException();
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            foreach (var batch in entities.Batches(GeneralSettings.BatchSize))
+            {
+                await DeleteBatchAsync(batch, isSoftDeleted);
+            }
+
         }
 
-        Task IGenericRepository<TEntity>.DeleteAsync(TEntity entity, bool isSoftDeleted)
+        public virtual async Task DeleteAsync(TEntity entity, bool isSoftDeleted = false)
         {
-            throw new NotImplementedException();
+            if (isSoftDeleted)
+            {
+                entity.IsDeleted = true;
+                UpdateEntity(entity);
+            }
+            else
+            {
+                DbSet.Remove(entity);
+            }
+
+            await DbContext.SaveChangesAsync();
         }
 
         Task<TEntity?> IGenericRepository<TEntity>.GetAsync(Expression<Func<TEntity, bool>> criteria)
@@ -202,7 +250,7 @@ namespace SmartInventoryBE.Repository
 
                 count += entities.Count;
                 result.AddRange(entities);
-            } 
+            }
             while (count < totalCount);
 
             return result;
@@ -274,6 +322,12 @@ namespace SmartInventoryBE.Repository
             return query;
         }
 
+        protected void UpdateEntity(TEntity entity)
+        {
+            DbContext.Entry(entity).State = EntityState.Modified;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
         private async Task<GenericSearchResult<TEntity>> HandleSearchAsync(SearchCriteria criteria, IQueryable<TEntity> query)
         {
             query = BuildQuery(query, criteria);
@@ -334,6 +388,60 @@ namespace SmartInventoryBE.Repository
             foreach (var entity in entities)
             {
                 await DbSet.AddAsync(entity);
+            }
+
+            await DbContext.SaveChangesAsync();
+        }
+
+        private async Task CreateOrUpdateEntryAsync(TEntity entity)
+        {
+            if (entity.Id == 0)
+            {
+                await DbSet.AddAsync(entity);
+            }
+            else
+            {
+                DbContext.Entry(entity).State = EntityState.Modified;
+            }
+        }
+
+        private async Task AddOrUpdateBatchAsync(IList<TEntity> entities)
+        {
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            foreach (var entity in entities)
+            {
+                await CreateOrUpdateEntryAsync(entity);
+            }
+
+            await DbContext.SaveChangesAsync();
+        }
+
+        private async Task DeleteBatchAsync(IList<TEntity> entities, bool isSoftDeleted = false)
+        {
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            if (isSoftDeleted)
+            {
+                foreach (var entity in entities)
+                {
+                    entity.IsDeleted = true;
+                    UpdateEntity(entity);
+
+                }
+            }
+            else
+            {
+                foreach (var entity in entities)
+                {
+                    DbSet.Remove(entity);
+                }
             }
 
             await DbContext.SaveChangesAsync();
