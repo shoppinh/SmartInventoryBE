@@ -157,59 +157,117 @@ namespace SmartInventoryBE.Repository
             await DbContext.SaveChangesAsync();
         }
 
-        Task<TEntity?> IGenericRepository<TEntity>.GetAsync(Expression<Func<TEntity, bool>> criteria)
+        public virtual async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> criteria)
         {
-            throw new NotImplementedException();
+            return await Includes().Where(criteria).FirstOrDefaultAsync();
         }
 
-        Task<TEntity?> IGenericRepository<TEntity>.GetAsync(Expression<Func<TEntity, bool>> criteria, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> criteria, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            return await Query(includes).Where(criteria).FirstOrDefaultAsync();
         }
 
-        Task<TEntity?> IGenericRepository<TEntity>.GetByIdAsync(int id)
+        public virtual async Task<TEntity?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await Includes().FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        Task<TEntity?> IGenericRepository<TEntity>.GetByIdAsync(int id, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<TEntity?> GetByIdAsync(int id, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            return await Query(includes).FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.GetByIdsAsync(IList<int> ids)
+        public virtual async Task<IList<TEntity>> GetByIdsAsync(IList<int> ids)
         {
-            throw new NotImplementedException();
+            var results = new List<TEntity>();
+
+            if (!ids.SafeAny())
+            {
+                return results;
+            }
+
+            foreach (var batch in ids.Batches(GeneralSettings.BatchSize))
+            {
+                var entities = await Includes().Where(x => batch.Contains(x.Id)).ToListAsync();
+
+                if (!entities.SafeAny())
+                {
+                    continue;
+                }
+                results.AddRange(entities);
+            }
+
+            return results;
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.GetByIdsAsync(IList<int> ids, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<IList<TEntity>> GetByIdsAsync(IList<int> ids, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            var results = new List<TEntity>();
+
+            if (!ids.SafeAny())
+            {
+                return results;
+            }
+
+            foreach (var batchIds in ids.Batches(GeneralSettings.BatchSize))
+            {
+                var entities = await Query(includes).Where(x => batchIds.Contains(x.Id)).ToListAsync();
+                if (!entities.SafeAny())
+                {
+                    continue;
+                }
+
+                results.AddRange(entities);
+
+            }
+
+            return results;
         }
 
-        Task<IList<TDestination>> IGenericRepository<TEntity>.GetByIdsProjectionAsync<TDestination>(IList<int> ids, Expression<Func<TEntity, TDestination>> projection)
+        public virtual async Task<IList<TDestination>> GetByIdsProjectionAsync<TDestination>(IList<int> ids, Expression<Func<TEntity, TDestination>> projection)
         {
-            throw new NotImplementedException();
+            var results = new List<TDestination>();
+
+            if (!ids.SafeAny())
+            {
+                return results;
+            }
+
+            foreach (var batchIds in ids.Batches(GeneralSettings.BatchSize))
+            {
+                var entities = await DbSet.AsQueryable().Where(x => batchIds.Contains(x.Id)).Select(projection).ToListAsync();
+                if (!entities.SafeAny())
+                {
+                    continue;
+                }
+
+                results.AddRange(entities);
+
+            }
+
+            return results;
         }
 
-        Task<TDestination?> IGenericRepository<TEntity>.GetWithProjectionAsync<TDestination>(Expression<Func<TEntity, bool>> criteria, Expression<Func<TEntity, TDestination>> projection) where TDestination : default
+        public virtual async Task<TDestination?> GetWithProjectionAsync<TDestination>(Expression<Func<TEntity, bool>> criteria, Expression<Func<TEntity, TDestination>> projection)
         {
-            throw new NotImplementedException();
+            return await DbSet.AsQueryable().Where(criteria).Select(projection).FirstOrDefaultAsync();
+
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.ListAsync(Expression<Func<TEntity, bool>> criteria, params Expression<Func<TEntity, object>>[]? includes)
+        public virtual async Task<IList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> criteria, params Expression<Func<TEntity, object>>[]? includes)
         {
-            throw new NotImplementedException();
+            return await Query(includes).Where(criteria).ToListAsync();
+
         }
 
-        Task<IList<TEntity>> IGenericRepository<TEntity>.ListAsync(Expression<Func<TEntity, bool>> criteria)
+        public virtual async Task<IList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> criteria)
         {
-            throw new NotImplementedException();
+            return await Includes().Where(criteria).ToListAsync();
         }
 
-        Task<IList<TDestination>> IGenericRepository<TEntity>.ListWithProjectionAsync<TDestination>(Expression<Func<TEntity, bool>> criteria, Expression<Func<TEntity, TDestination>> projection)
+        public virtual async Task<IList<TDestination>> ListWithProjectionAsync<TDestination>(Expression<Func<TEntity, bool>> criteria, Expression<Func<TEntity, TDestination>> projection)
         {
-            throw new NotImplementedException();
+            return await DbSet.AsQueryable().Where(criteria).Select(projection).ToListAsync();
         }
 
         public virtual async Task<IList<TEntity>> SearchAllAsync(SearchCriteria criteria, params Expression<Func<TEntity, object>>[]? includes)
@@ -289,14 +347,23 @@ namespace SmartInventoryBE.Repository
 
         }
 
-        Task IGenericRepository<TEntity>.UpdateAsync(IList<TEntity> entities)
+        public virtual async Task UpdateAsync(IList<TEntity> entities)
         {
-            throw new NotImplementedException();
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+
+            foreach (var batch in entities.Batches(GeneralSettings.BatchSize))
+            {
+                await UpdateBatchAsync(batch);
+            }
         }
 
-        Task IGenericRepository<TEntity>.UpdateAsync(TEntity entity)
+        public virtual async Task UpdateAsync(TEntity entity)
         {
-            throw new NotImplementedException();
+            UpdateEntity(entity);
+            await DbContext.SaveChangesAsync();
         }
 
         /// <summary>
@@ -442,6 +509,20 @@ namespace SmartInventoryBE.Repository
                 {
                     DbSet.Remove(entity);
                 }
+            }
+
+            await DbContext.SaveChangesAsync();
+        }
+
+        private async Task UpdateBatchAsync(IList<TEntity> entities)
+        {
+            if (!entities.SafeAny())
+            {
+                return;
+            }
+            foreach (var entity in entities)
+            {
+                UpdateEntity(entity);
             }
 
             await DbContext.SaveChangesAsync();

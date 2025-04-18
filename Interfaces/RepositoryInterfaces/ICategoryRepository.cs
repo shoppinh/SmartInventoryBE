@@ -2,8 +2,7 @@
 
 namespace SmartInventoryBE.Interfaces.RepositoryInterfaces
 {
-    public interface ICategoryRepository : IRepository<Category>
+    public interface ICategoryRepository : IGenericRepository<Category>
     {
-        IQueryable<Category> Categories { get; }
     }
 }
